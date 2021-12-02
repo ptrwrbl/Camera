@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         previewView = findViewById(R.id.camera_view);
         takeButton = findViewById(R.id.capture_button);
+        cameraExecutor = Executors.newSingleThreadExecutor();
 
         if(allPermissionsGranted()) {
             startCamera();
@@ -91,6 +92,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+
+        cameraProviderFuture.addListener( () -> {
+            try {
+                ProcessCameraProvider cameraProvider = (ProcessCameraProvider)cameraProviderFuture.get();
+                Preview preview = new Preview.Builder().build();
+
+                imageCapture = new ImageCapture.Builder()
+                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                        .build();
+
+                CameraSelector cameraSelector = new CameraSelector.Builder().build();
+
+                Camera camera = cameraProvider.bindToLifecycle(
+                        ((LifecycleOwner) this),
+                        cameraSelector,
+                        preview,
+                        imageCapture);
+
+                preview.setSurfaceProvider(
+                        previewView.getSurfaceProvider());
+            } catch (InterruptedException | ExecutionException e) {}
+        }, ContextCompat.getMainExecutor(this));
+
     }
 
     private void takePhoto() {
