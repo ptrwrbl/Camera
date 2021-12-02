@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{REQUIRED_PERMISSIONS}, REQUEST_CODE_PERMISSIONS);
         }
 
+        outputDirectory = getOutputDirectory();
         takeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -119,9 +120,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void takePhoto() {
+        if(imageCapture == null)
+            return;
+
+        File photoFile = new File(outputDirectory, PHOTO_FILENAME);
+        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+
+        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Uri savedUri = Uri.fromFile(photoFile);
+                String msg = "Photo capture succeeded: " + savedUri;
+                Toast.makeText(getBaseContext(),msg,Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(@NonNull ImageCaptureException exception) {
+                Toast.makeText(getBaseContext(),"Failed to save picture!",Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private File getOutputDirectory() {
-        return null;
+        File[] files = getExternalMediaDirs();
+        return files[0];
     }
 }
