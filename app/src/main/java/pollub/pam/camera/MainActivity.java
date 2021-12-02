@@ -51,6 +51,12 @@ public class MainActivity extends AppCompatActivity {
         previewView = findViewById(R.id.camera_view);
         takeButton = findViewById(R.id.capture_button);
 
+        if(allPermissionsGranted()) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{REQUIRED_PERMISSIONS}, REQUEST_CODE_PERMISSIONS);
+        }
+
         takeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -68,11 +74,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode == REQUEST_CODE_PERMISSIONS) {
+            startCamera();
+        } else {
+            Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
 
     private boolean allPermissionsGranted() {
-        return false;
+        int permissionGranted = PackageManager.PERMISSION_GRANTED;
+        int permissionRequired = ContextCompat.checkSelfPermission(getBaseContext(),REQUIRED_PERMISSIONS);
+        return permissionRequired == permissionGranted;
     }
 
     private void startCamera() {
